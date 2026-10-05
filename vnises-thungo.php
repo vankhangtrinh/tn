@@ -2,18 +2,26 @@
 /**
  * Plugin Name: VNISES — Thư ngỏ
  * Description: Editorial letter module for VNISES. Shortcode: [vnises_thungo]. No JavaScript, no external assets.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      VNISES
  * License:     GPL-2.0-or-later
  * Text Domain: vnises-thungo
  *
  * Usage:
- *   [vnises_thungo]                      Light tone, heading rendered as <h2>.
- *   [vnises_thungo tone="dark"]          Dark tone for dark page sections.
+ *   [vnises_thungo]                      Night tone (matches the VNISES site background), heading as <h2>.
+ *   [vnises_thungo tone="light"]         Paper tone, for light page sections.
  *   [vnises_thungo heading="h3"]         Heading level when nested under an existing <h2>.
  *
  * The file can be installed as a standalone plugin (wp-content/plugins/vnises-thungo/vnises-thungo.php)
  * or loaded from a theme with require_once. It is safe to load more than once.
+ *
+ * Changelog:
+ *   1.1.0  Font stack rebuilt for Vietnamese: Georgia removed (it lacks precomposed glyphs such as
+ *          "ắ ấ ầ ế ề", which rendered as "ă´ â` ê´" on vnises.com). Text is NFC-normalised at render.
+ *          Default tone now matches the site (#050914), so the letter no longer reads as a card.
+ *          Layout reworked as a magazine opener: letterhead rule, display heading, standfirst,
+ *          offset reading column. Decorative ellipse removed.
+ *   1.0.0  Initial release.
  */
 
 /* =====================================================================
@@ -30,7 +38,7 @@ defined( 'ABSPATH' ) || exit;
  */
 if ( ! defined( 'VNISES_TG_VERSION' ) ) :
 
-define( 'VNISES_TG_VERSION', '1.0.0' );
+define( 'VNISES_TG_VERSION', '1.1.0' );
 define( 'VNISES_TG_HANDLE', 'vnises-thungo' );
 
 /* =====================================================================
@@ -75,7 +83,7 @@ function vnises_tg_config() {
  */
 function vnises_tg_allowed_values() {
 	return array(
-		'tone'    => array( 'light', 'dark' ),
+		'tone'    => array( 'dark', 'light' ),
 		'heading' => array( 'h2', 'h3', 'h4' ),
 	);
 }
@@ -96,7 +104,7 @@ function vnises_tg_allowed_inline() {
  * ===================================================================== */
 
 /**
- * [vnises_thungo tone="light|dark" heading="h2|h3|h4"]
+ * [vnises_thungo tone="dark|light" heading="h2|h3|h4"]
  *
  * @param array|string $atts Raw shortcode attributes.
  * @return string
@@ -106,7 +114,7 @@ function vnises_tg_shortcode( $atts ) {
 
 	$atts = shortcode_atts(
 		array(
-			'tone'    => 'light',
+			'tone'    => 'dark',
 			'heading' => 'h2',
 		),
 		$atts,
@@ -117,7 +125,7 @@ function vnises_tg_shortcode( $atts ) {
 	$heading = sanitize_key( $atts['heading'] );
 
 	$args = array(
-		'tone'    => in_array( $tone, $allowed['tone'], true ) ? $tone : 'light',
+		'tone'    => in_array( $tone, $allowed['tone'], true ) ? $tone : 'dark',
 		'heading' => in_array( $heading, $allowed['heading'], true ) ? $heading : 'h2',
 	);
 
@@ -127,6 +135,47 @@ function vnises_tg_shortcode( $atts ) {
 /* =====================================================================
  * 4. HTML OUTPUT
  * ===================================================================== */
+
+/**
+ * Normalise Vietnamese text to NFC (precomposed characters).
+ *
+ * Text typed with some Vietnamese input modes ("Unicode tổ hợp") arrives decomposed:
+ * "ế" as "e" + U+0302 + U+0301. Many system fonts cannot position stacked combining marks,
+ * so decomposed text renders with detached accents. NFC avoids that whenever the PHP intl
+ * extension is available; without it the text is returned unchanged.
+ *
+ * @param string $text Raw text.
+ * @return string
+ */
+function vnises_tg_nfc( $text ) {
+	if ( class_exists( 'Normalizer' ) ) {
+		$normalized = Normalizer::normalize( (string) $text, Normalizer::FORM_C );
+		if ( false !== $normalized ) {
+			return $normalized;
+		}
+	}
+	return (string) $text;
+}
+
+/**
+ * Text with the allowed inline markup only.
+ *
+ * @param string $text Raw paragraph text.
+ * @return string
+ */
+function vnises_tg_inline( $text ) {
+	return wp_kses( vnises_tg_nfc( $text ), vnises_tg_allowed_inline() );
+}
+
+/**
+ * Plain escaped text.
+ *
+ * @param string $text Raw text.
+ * @return string
+ */
+function vnises_tg_plain( $text ) {
+	return esc_html( vnises_tg_nfc( $text ) );
+}
 
 /**
  * Build the letter markup.
@@ -140,28 +189,27 @@ function vnises_tg_shortcode( $atts ) {
 function vnises_tg_render( array $config, array $args ) {
 	$heading_id  = wp_unique_id( 'vntg-heading-' );
 	$heading_tag = tag_escape( $args['heading'] );
-	$inline      = vnises_tg_allowed_inline();
 
 	$body = '';
 	foreach ( (array) $config['body'] as $paragraph ) {
-		$body .= '<p class="vntg-para">' . wp_kses( $paragraph, $inline ) . '</p>';
+		$body .= '<p class="vntg-para">' . vnises_tg_inline( $paragraph ) . '</p>';
 	}
 
 	$html  = '<section class="vntg-root vntg-tone-' . esc_attr( $args['tone'] ) . '" lang="' . esc_attr( $config['lang'] ) . '" aria-labelledby="' . esc_attr( $heading_id ) . '">';
 	$html .= '<div class="vntg-inner">';
 
 	$html .= '<header class="vntg-head">';
-	$html .= '<p class="vntg-kicker">' . esc_html( $config['kicker'] ) . '</p>';
-	$html .= '<' . $heading_tag . ' class="vntg-heading" id="' . esc_attr( $heading_id ) . '">' . esc_html( $config['heading'] ) . '</' . $heading_tag . '>';
+	$html .= '<p class="vntg-kicker">' . vnises_tg_plain( $config['kicker'] ) . '</p>';
+	$html .= '<' . $heading_tag . ' class="vntg-heading" id="' . esc_attr( $heading_id ) . '">' . vnises_tg_plain( $config['heading'] ) . '</' . $heading_tag . '>';
 	$html .= '</header>';
 
 	$html .= '<div class="vntg-letter">';
-	$html .= '<p class="vntg-opening">' . wp_kses( $config['opening'], $inline ) . '</p>';
+	$html .= '<p class="vntg-opening">' . vnises_tg_inline( $config['opening'] ) . '</p>';
 	$html .= '<hr class="vntg-rule">';
 	$html .= $body;
 	$html .= '<footer class="vntg-signature">';
-	$html .= '<p class="vntg-sign-short">' . esc_html( $config['signature']['short'] ) . '</p>';
-	$html .= '<p class="vntg-sign-full" lang="' . esc_attr( $config['signature']['lang'] ) . '">' . esc_html( $config['signature']['full'] ) . '</p>';
+	$html .= '<p class="vntg-sign-short">' . vnises_tg_plain( $config['signature']['short'] ) . '</p>';
+	$html .= '<p class="vntg-sign-full" lang="' . esc_attr( $config['signature']['lang'] ) . '">' . vnises_tg_plain( $config['signature']['full'] ) . '</p>';
 	$html .= '</footer>';
 	$html .= '</div>';
 
@@ -181,6 +229,11 @@ function vnises_tg_render( array $config, array $args ) {
  * Base unit: font-size on .vntg-inner uses max(px, rem) so a theme that sets
  * html { font-size: 62.5% } cannot shrink the text, while a reader who raises
  * the browser default size still gets larger text. All spacing is in em.
+ *
+ * Typefaces: every family in the serif stack must carry full Vietnamese
+ * (precomposed Latin Extended Additional, U+1EA0–U+1EF9). Georgia is deliberately
+ * absent: it lacks those glyphs and breaks "ắ ấ ầ ế ề". Cambria (Windows, Office),
+ * Noto Serif (Android, Linux) and Times New Roman (Windows, macOS, iOS) are used.
  */
 
 /**
@@ -191,14 +244,15 @@ function vnises_tg_render( array $config, array $args ) {
 function vnises_tg_css_base() {
 	return '
 .vntg-root{
-	--vntg-bg:#f5f3ee;
-	--vntg-ink:#1f2023;
-	--vntg-ink-soft:#56575b;
-	--vntg-accent:#8a5530;
-	--vntg-line:rgba(31,32,35,.2);
-	--vntg-orbit:rgba(31,32,35,.09);
-	--vntg-measure:37em;
-	--vntg-serif:Georgia,"Noto Serif","Palatino Linotype","Book Antiqua",Palatino,"Times New Roman",serif;
+	--vntg-bg:#050914;
+	--vntg-ink-strong:#f1eee7;
+	--vntg-ink:#dcd8cf;
+	--vntg-ink-soft:#9c9a94;
+	--vntg-accent:#dd3333;
+	--vntg-line:rgba(241,238,231,.16);
+	--vntg-measure:36em;
+	--vntg-offset:0;
+	--vntg-serif:Cambria,"Noto Serif","Times New Roman",Times,serif;
 	--vntg-sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
 	container-type:inline-size;
 	container-name:vntg;
@@ -215,14 +269,17 @@ function vnises_tg_css_base() {
 	overflow:clip;
 	-webkit-text-size-adjust:100%;
 	text-size-adjust:100%;
+	-webkit-font-smoothing:antialiased;
+	-moz-osx-font-smoothing:grayscale;
 }
-.vntg-root.vntg-tone-dark{
-	--vntg-bg:#131416;
-	--vntg-ink:#e6e3dc;
-	--vntg-ink-soft:#a5a29b;
-	--vntg-accent:#c9a07a;
-	--vntg-line:rgba(230,227,220,.22);
-	--vntg-orbit:rgba(230,227,220,.08);
+.vntg-root.vntg-tone-light{
+	--vntg-bg:#f6f4ef;
+	--vntg-ink-strong:#14161b;
+	--vntg-ink:#2b2d32;
+	--vntg-ink-soft:#5c5d62;
+	--vntg-line:rgba(20,22,27,.16);
+	-webkit-font-smoothing:auto;
+	-moz-osx-font-smoothing:auto;
 }
 .vntg-root *,
 .vntg-root *::before,
@@ -233,12 +290,13 @@ function vnises_tg_css_base() {
 	font-family:var(--vntg-serif);
 	font-size:max(17px,1.0625rem);
 	font-weight:400;
-	line-height:1.78;
+	line-height:1.8;
 	font-kerning:normal;
+	font-variant-ligatures:common-ligatures;
 	text-rendering:optimizeLegibility;
-	max-width:66em;
+	max-width:64em;
 	margin:0 auto;
-	padding:4em 22px 4.5em;
+	padding:4.5em 22px 5em;
 }
 .vntg-root p,
 .vntg-root .vntg-heading{
@@ -246,68 +304,78 @@ function vnises_tg_css_base() {
 	padding:0;
 	border:0;
 	background:none;
+	font-style:normal;
 	text-align:left;
 	text-transform:none;
 	text-indent:0;
+	text-shadow:none;
 	letter-spacing:normal;
 	overflow-wrap:break-word;
 	-webkit-hyphens:manual;
 	hyphens:manual;
 }
 
-/* Header: letterhead kicker + heading */
+/* Letterhead: one hairline across the full measure, one short brand-red segment on it. */
 .vntg-root .vntg-head{
 	position:relative;
-	margin:0 0 2.5em;
-	padding:0;
+	margin:0 0 2.75em;
+	padding:1.15em 0 0;
 	border:0;
+	border-top:1px solid var(--vntg-line);
 	background:none;
 }
+.vntg-root .vntg-head::before{
+	content:"";
+	position:absolute;
+	top:-1px;
+	left:0;
+	width:2.75em;
+	height:1px;
+	background:var(--vntg-accent);
+}
 .vntg-root .vntg-kicker{
-	display:flex;
-	align-items:center;
-	gap:1em;
-	margin:0 0 2.25em;
+	margin:0 0 2.75em;
 	font-family:var(--vntg-sans);
 	font-size:.6875em;
 	font-weight:600;
 	line-height:1.5;
-	letter-spacing:.2em;
+	letter-spacing:.24em;
 	text-transform:uppercase;
-	color:var(--vntg-accent);
-}
-.vntg-root .vntg-kicker::before{
-	content:"";
-	flex:0 0 2.75em;
-	height:1px;
-	background:currentColor;
+	color:var(--vntg-ink-soft);
 }
 .vntg-root .vntg-heading{
 	font-family:var(--vntg-serif);
-	font-size:2em;
+	font-size:2.5em;
 	font-weight:400;
-	font-style:normal;
-	line-height:1.15;
-	letter-spacing:-.012em;
-	color:var(--vntg-ink);
+	line-height:1.08;
+	letter-spacing:-.018em;
+	color:var(--vntg-ink-strong);
 	text-wrap:balance;
 }
 
-/* Letter body */
-.vntg-root .vntg-letter{
-	max-width:var(--vntg-measure);
-}
+/* Standfirst: the opening paragraph carries the letter, at a larger size. */
 .vntg-root .vntg-opening{
-	font-size:1.125em;
-	line-height:1.68;
-	color:var(--vntg-ink);
+	max-width:31em;
+	font-size:1.1875em;
+	line-height:1.62;
+	color:var(--vntg-ink-strong);
 	text-wrap:pretty;
+	hanging-punctuation:first;
+}
+
+/* Body: rule, paragraphs and signature share one reading column (offset on wide layouts). */
+.vntg-root .vntg-rule,
+.vntg-root .vntg-para,
+.vntg-root .vntg-signature{
+	margin-left:var(--vntg-offset);
 }
 .vntg-root .vntg-rule{
 	display:block;
 	width:2.5em;
 	height:0;
-	margin:2.5em 0 2.125em;
+	margin-top:2.75em;
+	margin-bottom:2.25em;
+	margin-right:0;
 	padding:0;
 	border:0;
 	border-top:1px solid var(--vntg-line);
@@ -316,31 +384,35 @@ function vnises_tg_css_base() {
 	opacity:1;
 }
 .vntg-root .vntg-para{
+	max-width:var(--vntg-measure);
 	font-size:1em;
 	color:var(--vntg-ink);
 	text-wrap:pretty;
+	hanging-punctuation:first;
 }
 .vntg-root .vntg-para + .vntg-para{
-	margin-top:1.15em;
+	margin-top:1.1em;
 }
 
 /* Signature */
 .vntg-root .vntg-signature{
-	margin:3.5em 0 0;
+	margin-top:3.75em;
+	margin-bottom:0;
+	margin-right:0;
 	padding:0;
 	border:0;
 	background:none;
 }
 .vntg-root .vntg-sign-short{
 	font-family:var(--vntg-sans);
-	font-size:.8125em;
+	font-size:.75em;
 	font-weight:600;
 	line-height:1.4;
-	letter-spacing:.16em;
-	color:var(--vntg-ink);
+	letter-spacing:.24em;
+	color:var(--vntg-ink-strong);
 }
 .vntg-root .vntg-sign-full{
-	margin-top:.4em;
+	margin-top:.55em;
 	font-family:var(--vntg-serif);
 	font-size:.9375em;
 	font-style:italic;
@@ -368,9 +440,9 @@ function vnises_tg_css_base() {
  * Breakpoints are container widths in CSS px (they track browser zoom, and stay
  * independent of whatever font-size the theme sets):
  *   < 640px     single column, mobile spacing
- *   >= 640px    tablet spacing, larger base size
- *   >= 960px    desktop size, letter offset from the left edge
- *   >= 1152px   editorial spread: heading in a margin rail, letter in the main column
+ *   >= 640px    tablet: larger base size and heading
+ *   >= 960px    desktop: display heading, reading column steps in from the opening
+ *   >= 1152px   wide: full magazine-opener proportions
  */
 
 /**
@@ -381,66 +453,64 @@ function vnises_tg_css_responsive() {
 @container vntg (min-width: 640px){
 	.vntg-root .vntg-inner{
 		font-size:max(18px,1.125rem);
-		padding:5.5em 40px 6em;
-	}
-	.vntg-root .vntg-heading{
-		font-size:2.25em;
+		padding:6em 40px 6.5em;
 	}
 	.vntg-root .vntg-head{
-		margin-bottom:2.75em;
+		margin-bottom:3.25em;
+	}
+	.vntg-root .vntg-kicker{
+		margin-bottom:3.5em;
+	}
+	.vntg-root .vntg-heading{
+		font-size:3.25em;
+	}
+	.vntg-root .vntg-opening{
+		font-size:1.3em;
+		line-height:1.58;
+	}
+	.vntg-root .vntg-rule{
+		margin-top:3.25em;
+		margin-bottom:2.5em;
 	}
 }
 @container vntg (min-width: 960px){
 	.vntg-root .vntg-inner{
+		--vntg-offset:20%;
 		font-size:max(19px,1.1875rem);
-		padding:6.5em 56px 7em;
-	}
-	.vntg-root .vntg-head,
-	.vntg-root .vntg-letter{
-		margin-left:8%;
+		padding:6em 56px 7em;
 	}
 	.vntg-root .vntg-heading{
-		font-size:2.375em;
+		font-size:3.75em;
 	}
 	.vntg-root .vntg-opening{
-		font-size:1.15em;
+		font-size:1.375em;
+		line-height:1.55;
+	}
+	.vntg-root .vntg-signature{
+		margin-top:4.25em;
 	}
 }
 @container vntg (min-width: 1152px){
 	.vntg-root .vntg-inner{
-		display:grid;
-		grid-template-columns:minmax(0,1fr) minmax(0,var(--vntg-measure));
-		column-gap:4.5em;
-		align-items:start;
-		padding:7.5em 64px 8em;
-	}
-	.vntg-root .vntg-head,
-	.vntg-root .vntg-letter{
-		margin-left:0;
+		--vntg-offset:27%;
+		font-size:max(20px,1.25rem);
+		padding:6.5em 64px 7.5em;
 	}
 	.vntg-root .vntg-head{
-		margin-bottom:0;
-		padding-right:1em;
+		margin-bottom:3.5em;
 	}
-	/* Letterhead offset: kicker block height (0.6875em x (1.5 + 2.25)) so the opening line meets the heading. */
-	.vntg-root .vntg-letter{
-		padding-top:2.578em;
+	.vntg-root .vntg-kicker{
+		margin-bottom:4.5em;
 	}
 	.vntg-root .vntg-heading{
-		font-size:2.5em;
+		font-size:4em;
 	}
-	/* The single decorative motif: one faint orbital ellipse resting in the empty margin rail. */
-	.vntg-root .vntg-head::after{
-		content:"";
-		position:absolute;
-		top:calc(100% + 3.5em);
-		left:-1.5em;
-		width:15em;
-		height:5.25em;
-		border:1px solid var(--vntg-orbit);
-		border-radius:50%;
-		transform:rotate(-14deg);
-		pointer-events:none;
+	.vntg-root .vntg-opening{
+		font-size:1.3em;
+	}
+	.vntg-root .vntg-rule{
+		margin-top:3.75em;
+		margin-bottom:2.75em;
 	}
 }
 ';
@@ -450,11 +520,12 @@ function vnises_tg_css_responsive() {
  * 7. ACCESSIBILITY
  * =====================================================================
  * - No animation exists; the reduced-motion block only neutralises anything a theme might inject.
- * - Forced colors (Windows High Contrast): drop the decorative ellipse, keep the rule as a system line.
+ * - Forced colors (Windows High Contrast): letterhead accent and rule become system lines.
  * - Print: plain ink on paper.
- * - Contrast (light): ink 14.69:1, ink-soft 6.51:1, accent 5.53:1 on #f5f3ee.
- *   Contrast (dark):  ink 14.38:1, ink-soft 7.23:1, accent 7.72:1 on #131416.
- *   (WCAG 2.x relative luminance; every text colour >= 4.5:1, AA for normal-size text.)
+ * - Contrast, WCAG 2.x relative luminance (every text colour >= 4.5:1, AA for normal text):
+ *     dark  on #050914: ink-strong 17.17:1, ink 13.97:1, ink-soft 7.07:1
+ *     light on #f6f4ef: ink-strong 16.47:1, ink 12.54:1, ink-soft 5.98:1
+ *   The brand red (#dd3333) is only used for a 1px decorative segment, never for text.
  */
 
 /**
@@ -463,7 +534,7 @@ function vnises_tg_css_responsive() {
 function vnises_tg_css_a11y() {
 	return '
 .vntg-root a:focus-visible{
-	outline:2px solid var(--vntg-ink);
+	outline:2px solid var(--vntg-ink-strong);
 	outline-offset:3px;
 	border-radius:2px;
 	text-decoration:none;
@@ -479,29 +550,28 @@ function vnises_tg_css_a11y() {
 	}
 }
 @media (forced-colors: active){
-	.vntg-root .vntg-head::after{
-		display:none;
+	.vntg-root .vntg-head{
+		border-top-color:CanvasText;
+	}
+	.vntg-root .vntg-head::before{
+		background:CanvasText;
 	}
 	.vntg-root .vntg-rule{
 		border-top-color:CanvasText;
 	}
-	.vntg-root .vntg-kicker::before{
-		background:CanvasText;
-	}
 }
 @media print{
-	.vntg-root{
+	.vntg-root,
+	.vntg-root.vntg-tone-light{
 		--vntg-bg:#fff;
-		--vntg-ink:#000;
-		--vntg-ink-soft:#333;
+		--vntg-ink-strong:#000;
+		--vntg-ink:#111;
+		--vntg-ink-soft:#444;
 		--vntg-accent:#000;
 		--vntg-line:#999;
 	}
 	.vntg-root .vntg-inner{
 		padding:0;
-	}
-	.vntg-root .vntg-head::after{
-		display:none;
 	}
 }
 ';
