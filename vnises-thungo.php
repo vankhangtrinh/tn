@@ -2,7 +2,7 @@
 /**
  * Plugin Name: VNISES — Thư ngỏ
  * Description: Editorial letter module for VNISES. Shortcode: [vnises_thungo]. No JavaScript, no external assets.
- * Version:     1.8.0
+ * Version:     1.9.0
  * Author:      VNISES
  * License:     GPL-2.0-or-later
  * Text Domain: vnises-thungo
@@ -16,6 +16,8 @@
  * or loaded from a theme with require_once. It is safe to load more than once.
  *
  * Changelog:
+ *   1.9.0  Owner edits: kicker "VNISES" above the heading removed; salutation "Thân gửi bạn đọc" added
+ *          under the heading; the accuracy/verifiability paragraph removed (four paragraphs remain).
  *   1.8.0  New telling (owner request): the letter opens on a concrete observation the reader can make
  *          (the Moon rising later each day), follows it across fields, and closes on the same image.
  *          Same five ideas and "cần" commitments; same writing spec as 1.7 (all checks pass).
@@ -58,7 +60,7 @@ defined( 'ABSPATH' ) || exit;
  */
 if ( ! defined( 'VNISES_TG_VERSION' ) ) :
 
-define( 'VNISES_TG_VERSION', '1.8.0' );
+define( 'VNISES_TG_VERSION', '1.9.0' );
 define( 'VNISES_TG_HANDLE', 'vnises-thungo' );
 
 /* =====================================================================
@@ -77,13 +79,12 @@ define( 'VNISES_TG_HANDLE', 'vnises-thungo' );
 function vnises_tg_config() {
 	$config = array(
 		'lang'      => 'vi',
-		'kicker'    => 'VNISES',
 		'heading'   => 'Thư ngỏ',
+		'salutation' => 'Thân gửi bạn đọc',
 		'opening'   => 'Có lẽ bạn từng để ý Mặt Trăng mỗi ngày lại mọc muộn hơn hôm trước. Khoa học thường bắt đầu như thế. Một quan sát nhỏ dẫn tới một câu hỏi. Có câu hỏi lại đi xa hơn, tới tận giới hạn của những gì con người hiện có thể quan sát và hiểu được. Dù lớn hay nhỏ, câu trả lời chỉ trọn vẹn khi ta biết nó dựa trên bằng chứng nào, được kiểm chứng ra sao và đúng đến đâu.',
 		'body'      => array(
 			'Chúng tôi xây dựng VNISES để bạn tự mình đi theo những câu hỏi ấy, xa hơn những trang chữ. Bạn có thể thấy một mối quan hệ hiện ra từ dữ liệu. Bạn có thể thay đổi một điều kiện trong mô hình, rồi đặt kết quả mới cạnh kết quả cũ. Mỗi thao tác như vậy cũng là một lần tự kiểm tra. Những khái niệm vốn trừu tượng nhờ thế gần lại, mà chiều sâu thì vẫn còn nguyên.',
 			'Các lĩnh vực khoa học không đứng riêng. Câu hỏi về Mặt Trăng mọc muộn có thể dẫn bạn tới quỹ đạo của nó, rồi tới âm lịch và thủy triều. Cái tên <span lang="en">Vietnam Nexus for Interactive Space Exploration and Science</span> phản ánh cách nhìn ấy. <span lang="en">Nexus</span> là điểm giao, nơi lý thuyết gặp quan sát và mô hình được đặt cạnh thực tế để đối chiếu. Chúng tôi muốn làm rõ những mối liên hệ ấy để bạn đi sâu theo lối riêng của mình.',
-			'Muốn đi sâu thì nền móng phải vững. Với VNISES, nền móng ấy là độ chính xác và khả năng kiểm chứng. Khi xem một kết quả, bạn cần biết nó đến từ dữ liệu hay mô phỏng, dựa trên giả định nào, lấy từ nguồn nào. Giới hạn của mô hình, nếu ảnh hưởng đến kết quả, cũng cần được nói ra. Có những điều khoa học chưa biết chắc. Với những điều ấy, sự chưa chắc chắn cần được giữ nguyên như một phần của hiểu biết.',
 			'Mong muốn của chúng tôi là một không gian khám phá khoa học và công nghệ vũ trụ có chiều sâu, trực quan và đáng tin cậy. Bạn có thể bắt đầu từ Mặt Trăng ngoài cửa sổ, hay từ bất cứ điều gì mình quan sát được. Đi xa đến đâu là tùy ở điều bạn muốn hiểu.',
 		),
 		'signature' => array(
@@ -219,8 +220,8 @@ function vnises_tg_render( array $config, array $args ) {
 	$html .= '<div class="vntg-inner">';
 
 	$html .= '<header class="vntg-head">';
-	$html .= '<p class="vntg-kicker">' . vnises_tg_plain( $config['kicker'] ) . '</p>';
 	$html .= '<' . $heading_tag . ' class="vntg-heading" id="' . esc_attr( $heading_id ) . '">' . vnises_tg_plain( $config['heading'] ) . '</' . $heading_tag . '>';
+	$html .= '<p class="vntg-salutation">' . vnises_tg_plain( $config['salutation'] ) . '</p>';
 	$html .= '</header>';
 
 	$html .= '<div class="vntg-letter">';
@@ -339,7 +340,7 @@ function vnises_tg_css_base() {
 .vntg-root .vntg-head{
 	position:relative;
 	margin:0 0 2.75em;
-	padding:1.15em 0 0;
+	padding:2em 0 0;
 	border:0;
 	border-top:1px solid var(--vntg-line);
 	background:none;
@@ -353,16 +354,6 @@ function vnises_tg_css_base() {
 	height:1px;
 	background:var(--vntg-accent);
 }
-.vntg-root .vntg-kicker{
-	margin:0 0 2.75em;
-	font-family:var(--vntg-sans);
-	font-size:.6875em;
-	font-weight:600;
-	line-height:1.5;
-	letter-spacing:.24em;
-	text-transform:uppercase;
-	color:var(--vntg-ink-soft);
-}
 .vntg-root .vntg-heading{
 	font-family:var(--vntg-serif);
 	font-size:2.5em;
@@ -371,6 +362,16 @@ function vnises_tg_css_base() {
 	letter-spacing:-.018em;
 	color:var(--vntg-ink-strong);
 	text-wrap:balance;
+}
+
+/* Salutation: the letter is addressed to the reader, set like the opening line of a handwritten letter. */
+.vntg-root .vntg-salutation{
+	margin-top:.9em;
+	font-family:var(--vntg-serif);
+	font-size:1.0625em;
+	font-style:italic;
+	line-height:1.5;
+	color:var(--vntg-ink-soft);
 }
 
 /* Letter paragraphs are justified (owner decision). Vietnamese is monosyllabic, so word gaps stay even
@@ -485,10 +486,8 @@ function vnises_tg_css_responsive() {
 		padding:2.5em 40px 6em;
 	}
 	.vntg-root .vntg-head{
-		margin-bottom:3.25em;
-	}
-	.vntg-root .vntg-kicker{
 		margin-bottom:3em;
+		padding-top:2.5em;
 	}
 	.vntg-root .vntg-heading{
 		font-size:2.75em;
@@ -527,9 +526,10 @@ function vnises_tg_css_responsive() {
 	}
 	.vntg-root .vntg-head{
 		margin-bottom:2.75em;
+		padding-top:2.75em;
 	}
-	.vntg-root .vntg-kicker{
-		margin-bottom:3.25em;
+	.vntg-root .vntg-salutation{
+		font-size:1.1em;
 	}
 	.vntg-root .vntg-heading{
 		font-size:3.25em;
