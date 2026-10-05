@@ -2,7 +2,7 @@
 /**
  * Plugin Name: VNISES — Thư ngỏ
  * Description: Editorial letter module for VNISES. Shortcode: [vnises_thungo]. No JavaScript, no external assets.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      VNISES
  * License:     GPL-2.0-or-later
  * Text Domain: vnises-thungo
@@ -16,6 +16,9 @@
  * or loaded from a theme with require_once. It is safe to load more than once.
  *
  * Changelog:
+ *   1.2.0  Letter paragraphs justified (owner decision; supersedes the original "left-aligned" rule).
+ *          Editorial refinement of the Vietnamese wording, approved scope: same claims, same structure,
+ *          same commitments (modal "cần" kept), no added statements.
  *   1.1.0  Font stack rebuilt for Vietnamese: Georgia removed (it lacks precomposed glyphs such as
  *          "ắ ấ ầ ế ề", which rendered as "ă´ â` ê´" on vnises.com). Text is NFC-normalised at render.
  *          Default tone now matches the site (#050914), so the letter no longer reads as a card.
@@ -38,7 +41,7 @@ defined( 'ABSPATH' ) || exit;
  */
 if ( ! defined( 'VNISES_TG_VERSION' ) ) :
 
-define( 'VNISES_TG_VERSION', '1.1.0' );
+define( 'VNISES_TG_VERSION', '1.2.0' );
 define( 'VNISES_TG_HANDLE', 'vnises-thungo' );
 
 /* =====================================================================
@@ -59,12 +62,12 @@ function vnises_tg_config() {
 		'lang'      => 'vi',
 		'kicker'    => 'VNISES',
 		'heading'   => 'Thư ngỏ',
-		'opening'   => 'Khoa học bắt đầu từ những câu hỏi. Có những câu hỏi xuất phát từ một hiện tượng rất gần gũi; cũng có những câu hỏi đưa chúng ta đến giới hạn của những gì con người hiện có thể quan sát và hiểu được. Điều quan trọng không chỉ là tìm ra câu trả lời, mà còn là biết câu trả lời ấy dựa trên bằng chứng nào, được kiểm tra ra sao và giới hạn của nó nằm ở đâu.',
+		'opening'   => 'Khoa học bắt đầu từ những câu hỏi. Có câu hỏi nảy sinh từ một hiện tượng rất đỗi quen thuộc; có câu hỏi lại đưa chúng ta tới giới hạn của những gì con người hôm nay có thể quan sát và hiểu được. Điều cốt yếu không chỉ là tìm ra câu trả lời, mà còn là biết câu trả lời ấy dựa trên bằng chứng nào, được kiểm chứng ra sao, và giới hạn của nó nằm ở đâu.',
 		'body'      => array(
-			'VNISES được xây dựng để đưa người dùng đến gần hơn với quá trình khám phá đó. Khoa học ở đây không chỉ được trình bày bằng văn bản, mà còn được quan sát qua dữ liệu, khám phá bằng mô hình và kiểm tra thông qua tương tác. Khi có thể nhìn thấy một mối quan hệ, thay đổi một điều kiện hoặc so sánh những kết quả khác nhau, những khái niệm vốn trừu tượng trở nên dễ tiếp cận hơn mà không cần đánh đổi chiều sâu của chúng.',
-			'Tên gọi <span lang="en">Vietnam Nexus for Interactive Space Exploration and Science</span> phản ánh cách chúng tôi nhìn nhận tri thức khoa học: các lĩnh vực không tồn tại như những phần tách biệt. Lý thuyết liên hệ với quan sát, mô hình cần được đối chiếu với thực tế, và một câu hỏi trong lĩnh vực này có thể mở ra những vấn đề của một lĩnh vực khác. VNISES hướng tới làm rõ những kết nối đó và tạo ra những con đường để người dùng có thể tiếp tục đi sâu hơn.',
-			'Độ chính xác và khả năng kiểm chứng là nền tảng của hệ thống. Dữ liệu cần được phân biệt với mô phỏng, giả định cần được nhận diện, nguồn thông tin cần đủ rõ và giới hạn của mô hình cần được thể hiện khi chúng ảnh hưởng đến kết quả. Với những vấn đề chưa có câu trả lời chắc chắn, sự chưa chắc chắn cũng cần được giữ nguyên như một phần của kiến thức khoa học.',
-			'VNISES được phát triển với mục tiêu xây dựng một không gian khám phá khoa học và công nghệ vũ trụ có chiều sâu, trực quan và đáng tin cậy; nơi một người có thể bắt đầu từ điều mình quan sát được, rồi tiếp tục đi xa đến mức mình muốn hiểu.',
+			'VNISES được xây dựng để đưa người dùng đến gần hơn với chính quá trình khám phá ấy. Ở đây, khoa học không chỉ được trình bày bằng lời văn, mà còn được quan sát qua dữ liệu, khảo sát bằng mô hình và kiểm nghiệm qua tương tác. Khi có thể nhìn thấy một mối quan hệ, thay đổi một điều kiện hay so sánh những kết quả khác nhau, những khái niệm vốn trừu tượng trở nên gần gũi hơn mà không phải đánh đổi chiều sâu của chúng.',
+			'Tên gọi <span lang="en">Vietnam Nexus for Interactive Space Exploration and Science</span> phản ánh cách chúng tôi nhìn nhận tri thức khoa học: các lĩnh vực không tồn tại như những mảnh rời rạc. Lý thuyết gắn liền với quan sát, mô hình cần được đối chiếu với thực tế, và một câu hỏi ở lĩnh vực này có thể mở ra những vấn đề của một lĩnh vực khác. VNISES hướng tới làm sáng tỏ những mối liên kết ấy, và tạo nên những lối đi để người khám phá có thể tiếp tục đi sâu hơn.',
+			'Độ chính xác và khả năng kiểm chứng là nền tảng của hệ thống. Dữ liệu cần được phân biệt với mô phỏng; giả định cần được gọi tên; nguồn thông tin cần minh bạch; giới hạn của mô hình cần được nêu rõ khi chúng ảnh hưởng đến kết quả. Ở những vấn đề chưa có lời giải dứt khoát, chính sự bất định cũng cần được giữ nguyên như một phần của tri thức khoa học.',
+			'VNISES được phát triển với mong muốn tạo nên một không gian khám phá khoa học và công nghệ vũ trụ có chiều sâu, trực quan và đáng tin cậy — nơi mỗi người có thể bắt đầu từ điều mình quan sát được, rồi tiếp tục đi xa, đến chừng nào mình còn muốn hiểu.',
 		),
 		'signature' => array(
 			'short' => 'VNISES',
@@ -353,11 +356,20 @@ function vnises_tg_css_base() {
 	text-wrap:balance;
 }
 
+/* Letter paragraphs are justified (owner decision). Vietnamese is monosyllabic, so word gaps stay even
+   without hyphenation; the last line of each paragraph stays ragged. Signature and labels stay left. */
+.vntg-root .vntg-opening,
+.vntg-root .vntg-para{
+	text-align:justify;
+	text-align-last:auto;
+	text-justify:inter-word;
+}
+
 /* Standfirst: the opening paragraph carries the letter, at a larger size. */
 .vntg-root .vntg-opening{
 	max-width:31em;
-	font-size:1.1875em;
-	line-height:1.62;
+	font-size:1.125em;
+	line-height:1.66;
 	color:var(--vntg-ink-strong);
 	text-wrap:pretty;
 	hanging-punctuation:first;
