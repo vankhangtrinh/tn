@@ -2,7 +2,7 @@
 /**
  * Plugin Name: VNISES — Thư ngỏ
  * Description: Editorial letter module for VNISES. Shortcode: [vnises_thungo]. No JavaScript, no external assets.
- * Version:     1.6.0
+ * Version:     1.7.0
  * Author:      VNISES
  * License:     GPL-2.0-or-later
  * Text Domain: vnises-thungo
@@ -16,6 +16,8 @@
  * or loaded from a theme with require_once. It is safe to load more than once.
  *
  * Changelog:
+ *   1.7.0  Letter rewritten against an explicit writing spec (owner request): sentences <= 30 words,
+ *          average 15-20, each paragraph mixes short and long sentences, closing sentence short.
  *   1.6.0  Letter rewritten as a personal address to the reader (owner request): "chúng tôi" speaking
  *          to "bạn". Commitments phrased as intentions, no new claims, no AI-style constructions.
  *   1.5.0  Wording raised to an institutional register (owner request: v1.4 read too conversational),
@@ -53,7 +55,7 @@ defined( 'ABSPATH' ) || exit;
  */
 if ( ! defined( 'VNISES_TG_VERSION' ) ) :
 
-define( 'VNISES_TG_VERSION', '1.6.0' );
+define( 'VNISES_TG_VERSION', '1.7.0' );
 define( 'VNISES_TG_HANDLE', 'vnises-thungo' );
 
 /* =====================================================================
@@ -74,12 +76,12 @@ function vnises_tg_config() {
 		'lang'      => 'vi',
 		'kicker'    => 'VNISES',
 		'heading'   => 'Thư ngỏ',
-		'opening'   => 'Với chúng tôi, khoa học bắt đầu từ những câu hỏi. Có câu hỏi đến từ một điều rất gần gũi mà bạn vẫn thấy mỗi ngày. Có câu hỏi đưa chúng ta tới tận giới hạn của những gì con người hiện có thể quan sát và hiểu được. Nhưng tìm ra câu trả lời mới chỉ là một nửa. Nửa còn lại là biết câu trả lời ấy dựa trên bằng chứng nào, đã được kiểm chứng ra sao, và đúng đến đâu.',
+		'opening'   => 'Với chúng tôi, khoa học bắt đầu từ những câu hỏi. Có câu hỏi nảy ra từ một điều bạn vẫn thấy mỗi ngày. Có câu hỏi lại dẫn chúng ta tới giới hạn của những gì con người hiện có thể quan sát và hiểu được. Tìm ra câu trả lời mới chỉ là một nửa. Nửa còn lại là biết câu trả lời ấy dựa trên bằng chứng nào, được kiểm chứng ra sao và đúng đến đâu.',
 		'body'      => array(
-			'Chúng tôi xây dựng VNISES để bạn có thể đến gần hơn với quá trình khám phá ấy. Ở đây, bạn có thể đọc, nhưng cũng có thể nhìn vào dữ liệu, thử nghiệm trên mô hình và tự mình kiểm tra qua tương tác. Có những khái niệm thoạt nghe rất trừu tượng, nhưng khi bạn tự thấy được một mối quan hệ, thay đổi một điều kiện rồi đặt các kết quả cạnh nhau, chúng sẽ trở nên gần gũi hơn nhiều mà không phải mất đi chút chiều sâu nào.',
-			'Cái tên <span lang="en">Vietnam Nexus for Interactive Space Exploration and Science</span> nói lên cách chúng tôi nhìn tri thức khoa học. <span lang="en">Nexus</span> là điểm giao. Chúng tôi không xem các lĩnh vực khoa học là những ô tách biệt. Lý thuyết cần đến quan sát, mô hình cần được đối chiếu với thực tế, và một câu hỏi trong ngành này nhiều khi lại mở ra vấn đề của ngành khác. Chúng tôi muốn làm rõ những mối liên hệ ấy, để bạn có thể tiếp tục đi sâu hơn theo cách của riêng mình.',
-			'Nền tảng của tất cả những điều đó là độ chính xác và khả năng kiểm chứng. Bạn cần được biết rõ đâu là dữ liệu, đâu là mô phỏng, đâu là giả định, thông tin đến từ nguồn nào, và mô hình có giới hạn gì khi giới hạn ấy ảnh hưởng đến kết quả. Còn với những vấn đề chưa có lời giải chắc chắn, chúng tôi sẽ không vội khép lại. Sự chưa chắc chắn cũng là một phần của hiểu biết khoa học, và chúng tôi muốn giữ nguyên nó như vậy.',
-			'Điều chúng tôi mong muốn là VNISES trở thành một không gian khám phá khoa học và công nghệ vũ trụ có chiều sâu, trực quan và đáng tin cậy. Một nơi bạn có thể bắt đầu từ điều mình quan sát được, rồi đi xa đến đâu là tùy ở bạn, tùy ở điều bạn muốn hiểu.',
+			'Chúng tôi xây dựng VNISES để bạn đến gần hơn với quá trình khám phá ấy. Ở đây, bên cạnh việc đọc, bạn có thể xem dữ liệu, thử nghiệm với mô hình và tự kiểm tra qua tương tác. Có những khái niệm thoạt nghe rất trừu tượng. Nhưng khi bạn tự nhìn ra một mối quan hệ, thay đổi một điều kiện rồi so sánh kết quả, chúng trở nên dễ nắm bắt hơn nhiều. Mà chiều sâu thì vẫn còn nguyên.',
+			'Cái tên <span lang="en">Vietnam Nexus for Interactive Space Exploration and Science</span> nói lên cách chúng tôi nhìn nhận tri thức khoa học. <span lang="en">Nexus</span> là điểm giao. Các lĩnh vực khoa học không đứng riêng rẽ: lý thuyết cần đến quan sát, còn mô hình cần được đối chiếu với thực tế. Một câu hỏi trong ngành này nhiều khi lại mở ra vấn đề của ngành khác. Chúng tôi muốn làm rõ những mối liên hệ ấy để bạn đi sâu hơn theo cách của mình.',
+			'Nền tảng của tất cả những điều ấy là độ chính xác và khả năng kiểm chứng. Bạn cần được biết đâu là dữ liệu, đâu là mô phỏng và đâu là giả định. Nguồn thông tin cần được ghi rõ, và giới hạn của mô hình cần được nêu ra khi nó ảnh hưởng đến kết quả. Với những vấn đề chưa có lời giải dứt khoát, chúng tôi sẽ không vội kết luận. Sự chưa chắc chắn cũng là một phần của khoa học.',
+			'Điều chúng tôi mong là VNISES trở thành một không gian khám phá khoa học và công nghệ vũ trụ có chiều sâu, trực quan và đáng tin cậy. Một nơi bạn có thể bắt đầu từ điều mình quan sát được, rồi đi xa đến đâu là tùy ở bạn. Tùy ở điều bạn muốn hiểu.',
 		),
 		'signature' => array(
 			'short' => 'VNISES',
