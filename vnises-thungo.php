@@ -2,7 +2,7 @@
 /**
  * Plugin Name: VNISES — Thư ngỏ
  * Description: Editorial letter module for VNISES. Shortcode: [vnises_thungo]. No JavaScript, no external assets.
- * Version:     1.3.0
+ * Version:     1.3.1
  * Author:      VNISES
  * License:     GPL-2.0-or-later
  * Text Domain: vnises-thungo
@@ -16,6 +16,8 @@
  * or loaded from a theme with require_once. It is safe to load more than once.
  *
  * Changelog:
+ *   1.3.1  Top padding reduced (wide 100px -> 40px): the site header and the theme margin already
+ *          separate the letter, so the extra band above the letterhead only pushed content down.
  *   1.3.0  Tuned from live screenshots of vnises.com: quieter heading (Cambria renders heavier than
  *          expected at display size), tighter vertical rhythm above the fold, body measure 36em -> 34em.
  *          Cambria confirmed to render Vietnamese correctly on Windows/Edge (owner screenshots).
@@ -44,7 +46,7 @@ defined( 'ABSPATH' ) || exit;
  */
 if ( ! defined( 'VNISES_TG_VERSION' ) ) :
 
-define( 'VNISES_TG_VERSION', '1.3.0' );
+define( 'VNISES_TG_VERSION', '1.3.1' );
 define( 'VNISES_TG_HANDLE', 'vnises-thungo' );
 
 /* =====================================================================
@@ -302,7 +304,7 @@ function vnises_tg_css_base() {
 	text-rendering:optimizeLegibility;
 	max-width:64em;
 	margin:0 auto;
-	padding:4.5em 22px 5em;
+	padding:2.5em 22px 5em;
 }
 .vntg-root p,
 .vntg-root .vntg-heading{
@@ -468,7 +470,7 @@ function vnises_tg_css_responsive() {
 @container vntg (min-width: 640px){
 	.vntg-root .vntg-inner{
 		font-size:max(18px,1.125rem);
-		padding:5em 40px 6em;
+		padding:2.5em 40px 6em;
 	}
 	.vntg-root .vntg-head{
 		margin-bottom:3.25em;
@@ -492,7 +494,7 @@ function vnises_tg_css_responsive() {
 	.vntg-root .vntg-inner{
 		--vntg-offset:20%;
 		font-size:max(19px,1.1875rem);
-		padding:5em 56px 6.5em;
+		padding:2em 56px 6.5em;
 	}
 	.vntg-root .vntg-heading{
 		font-size:3em;
@@ -509,7 +511,7 @@ function vnises_tg_css_responsive() {
 	.vntg-root .vntg-inner{
 		--vntg-offset:27%;
 		font-size:max(20px,1.25rem);
-		padding:5em 64px 7em;
+		padding:2em 64px 7em;
 	}
 	.vntg-root .vntg-head{
 		margin-bottom:2.75em;
