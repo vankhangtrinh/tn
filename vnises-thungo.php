@@ -2,7 +2,7 @@
 /**
  * Plugin Name: VNISES — Thư ngỏ
  * Description: Editorial letter module for VNISES. Shortcode: [vnises_thungo]. No JavaScript, no external assets.
- * Version:     1.2.0
+ * Version:     1.3.0
  * Author:      VNISES
  * License:     GPL-2.0-or-later
  * Text Domain: vnises-thungo
@@ -16,6 +16,9 @@
  * or loaded from a theme with require_once. It is safe to load more than once.
  *
  * Changelog:
+ *   1.3.0  Tuned from live screenshots of vnises.com: quieter heading (Cambria renders heavier than
+ *          expected at display size), tighter vertical rhythm above the fold, body measure 36em -> 34em.
+ *          Cambria confirmed to render Vietnamese correctly on Windows/Edge (owner screenshots).
  *   1.2.0  Letter paragraphs justified (owner decision; supersedes the original "left-aligned" rule).
  *          Editorial refinement of the Vietnamese wording, approved scope: same claims, same structure,
  *          same commitments (modal "cần" kept), no added statements.
@@ -41,7 +44,7 @@ defined( 'ABSPATH' ) || exit;
  */
 if ( ! defined( 'VNISES_TG_VERSION' ) ) :
 
-define( 'VNISES_TG_VERSION', '1.2.0' );
+define( 'VNISES_TG_VERSION', '1.3.0' );
 define( 'VNISES_TG_HANDLE', 'vnises-thungo' );
 
 /* =====================================================================
@@ -235,8 +238,8 @@ function vnises_tg_render( array $config, array $args ) {
  *
  * Typefaces: every family in the serif stack must carry full Vietnamese
  * (precomposed Latin Extended Additional, U+1EA0–U+1EF9). Georgia is deliberately
- * absent: it lacks those glyphs and breaks "ắ ấ ầ ế ề". Cambria (Windows, Office),
- * Noto Serif (Android, Linux) and Times New Roman (Windows, macOS, iOS) are used.
+ * absent: it lacks those glyphs and breaks "ắ ấ ầ ế ề". Cambria (Windows, Office; verified on
+ * vnises.com), Noto Serif (Android, Linux) and Times New Roman (Windows, macOS, iOS) are used.
  */
 
 /**
@@ -253,7 +256,7 @@ function vnises_tg_css_base() {
 	--vntg-ink-soft:#9c9a94;
 	--vntg-accent:#dd3333;
 	--vntg-line:rgba(241,238,231,.16);
-	--vntg-measure:36em;
+	--vntg-measure:34em;
 	--vntg-offset:0;
 	--vntg-serif:Cambria,"Noto Serif","Times New Roman",Times,serif;
 	--vntg-sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
@@ -465,16 +468,16 @@ function vnises_tg_css_responsive() {
 @container vntg (min-width: 640px){
 	.vntg-root .vntg-inner{
 		font-size:max(18px,1.125rem);
-		padding:6em 40px 6.5em;
+		padding:5em 40px 6em;
 	}
 	.vntg-root .vntg-head{
 		margin-bottom:3.25em;
 	}
 	.vntg-root .vntg-kicker{
-		margin-bottom:3.5em;
+		margin-bottom:3em;
 	}
 	.vntg-root .vntg-heading{
-		font-size:3.25em;
+		font-size:2.75em;
 	}
 	.vntg-root .vntg-opening{
 		font-size:1.3em;
@@ -489,10 +492,10 @@ function vnises_tg_css_responsive() {
 	.vntg-root .vntg-inner{
 		--vntg-offset:20%;
 		font-size:max(19px,1.1875rem);
-		padding:6em 56px 7em;
+		padding:5em 56px 6.5em;
 	}
 	.vntg-root .vntg-heading{
-		font-size:3.75em;
+		font-size:3em;
 	}
 	.vntg-root .vntg-opening{
 		font-size:1.375em;
@@ -506,23 +509,23 @@ function vnises_tg_css_responsive() {
 	.vntg-root .vntg-inner{
 		--vntg-offset:27%;
 		font-size:max(20px,1.25rem);
-		padding:6.5em 64px 7.5em;
+		padding:5em 64px 7em;
 	}
 	.vntg-root .vntg-head{
-		margin-bottom:3.5em;
+		margin-bottom:2.75em;
 	}
 	.vntg-root .vntg-kicker{
-		margin-bottom:4.5em;
+		margin-bottom:3.25em;
 	}
 	.vntg-root .vntg-heading{
-		font-size:4em;
+		font-size:3.25em;
 	}
 	.vntg-root .vntg-opening{
 		font-size:1.3em;
 	}
 	.vntg-root .vntg-rule{
-		margin-top:3.75em;
-		margin-bottom:2.75em;
+		margin-top:3em;
+		margin-bottom:2.25em;
 	}
 }
 ';
